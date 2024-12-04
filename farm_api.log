@@ -1,0 +1,9 @@
+2024-12-03 12:17:24,233 - __main__ - INFO - Created/verified table and indexes: sensor_data
+2024-12-03 12:17:24,237 - __main__ - INFO - Created/verified table and indexes: environment_data
+2024-12-03 12:17:24,240 - __main__ - INFO - Created/verified table and indexes: images
+2024-12-03 12:17:24,242 - __main__ - INFO - Cleaning up resources...
+2024-12-03 12:17:57,674 - __main__ - INFO - Created/verified table and indexes: sensor_data
+2024-12-03 12:17:57,675 - __main__ - INFO - Created/verified table and indexes: environment_data
+2024-12-03 12:17:57,675 - __main__ - INFO - Created/verified table and indexes: images
+2024-12-03 12:17:57,767 - __main__ - INFO - Starting server...
+2024-12-03 12:17:57,770 - waitress - INFO - Serving on http://0.0.0.0:5000
