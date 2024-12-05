@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 BME680 Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #444;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: #fafafa;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        table th {
+            background-color: #007bff;
+            color: white;
+        }
+        table td {
+            color: #555;
+        }
+        .no-data {
+            text-align: center;
+            font-size: 16px;
+            color: #888;
+        }
+        .download-btn {
+            display: inline-block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+        .download-btn:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <h1>ESP32 BME680 Live Dashboard</h1>
+    <div class="container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Temperature (°C)</th>
+                    <th>Humidity (%)</th>
+                    <th>Pressure (hPa)</th>
+                    <th>Gas Resistance (Ω)</th>
+                    <th>Received Ago</th>
+                </tr>
+            </thead>
+            <tbody id="sensor-data"></tbody>
+        </table>
+        <a class="download-btn" href="/download">Download CSV</a>
+    </div>
+
+    <script>
+        async function fetchData() {
+            try {
+                const response = await fetch('/data');
+                const result = await response.json();
+                const data = result.data;
+                const tbody = document.getElementById('sensor-data');
+                tbody.innerHTML = ''; // Clear table
+
+                if (data.length > 0) {
+                    const latest = data[data.length - 1];
+                    const timestamp = latest[0];
+                    const temperature = latest[1];
+                    const humidity = latest[2];
+                    const pressure = latest[3];
+                    const gasResistance = latest[4];
+
+                    // Calculate time difference
+                    const now = new Date();
+                    const dataTime = new Date(timestamp);
+                    const diffMs = now - dataTime;
+                    const diffSec = Math.floor(diffMs / 1000);
+                    const diffMin = Math.floor(diffSec / 60);
+                    const receivedAgo = diffMin > 0 ? `${diffMin} minute(s) ago` : `${diffSec} second(s) ago`;
+
+                    const row = `
+                        <tr>
+                            <td>${timestamp}</td>
+                            <td>${temperature}</td>
+                            <td>${humidity}</td>
+                            <td>${pressure}</td>
+                            <td>${gasResistance}</td>
+                            <td>${receivedAgo}</td>
+                        </tr>
+                    `;
+                    tbody.innerHTML = row;
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" class="no-data">No data available</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        // Refresh data every 5 seconds
+        setInterval(fetchData, 5000);
+        fetchData(); // Initial fetch
+    </script>
+</body>
+</html>

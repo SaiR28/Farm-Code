@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Kissan AI Growth Monitor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        :root {
+            --primary: #16a34a;
+            --primary-dark: #15803d;
+            --primary-light: #22c55e;
+            --surface: #ffffff;
+            --background: #f0fdf4;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --shadow-sm: rgba(0, 0, 0, 0.1) 0px 1px 3px, rgba(0, 0, 0, 0.06) 0px 1px 2px;
+            --shadow-lg: rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.05) 0px 4px 6px -2px;
+            --gradient: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--text);
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .branding {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 48px;
+            height: 48px;
+            background: var(--gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.25rem;
+        }
+
+        .subtitle {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 3fr;
+            gap: 2rem;
+        }
+
+        .video-section {
+            background: var(--surface);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .video-container {
+            position: relative;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .video-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .video-container:hover .video-overlay {
+            opacity: 1;
+        }
+
+        .video-controls {
+            position: absolute;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.75rem;
+            z-index: 2;
+        }
+
+        .control-btn {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(4px);
+            border: none;
+            border-radius: 0.5rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-2px);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+
+        .metric-card {
+            background: var(--surface);
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0.5rem 0;
+        }
+
+        .metric-title {
+            color: var(--text-light);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .chart-card {
+            background: var(--surface);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s ease;
+            height: 250px; /* Fixed height for charts */
+        }
+
+        .chart-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .chart-title {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .ai-insights {
+            background: linear-gradient(135deg, rgba(22, 163, 74, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            margin-top: 1.5rem;
+        }
+
+        .insight-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .linkedin-btn {
+            background: var(--surface);
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .linkedin-btn:hover {
+            background: var(--background);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .timeline {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255,255,255,0.2);
+        }
+
+        .progress {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s linear;
+        }
+
+        .day-counter {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="branding">
+                <div class="logo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="title">Neural Kissan</h1>
+                    <p class="subtitle">AI-Powered Hydroponic Growth System</p>
+                </div>
+            </div>
+            <button class="linkedin-btn">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                </svg>
+                Share on LinkedIn
+            </button>
+        </header>
+
+        <main class="dashboard-grid">
+            <section class="video-section">
+                <div class="video-container">
+                    <img src="/api/placeholder/1280/720" alt="Hydroponic Growth" style="width: 100%; height: 100%; object-fit: cover">
+                    <div class="video-overlay">
+                        <div class="video-controls">
+                            <button class="control-btn" id="playBtn">
+                                <svg width="20" height="20" fill="white">
+                                    <path d="M8 5v14l11-7z"/>
+                                </svg>
+                            </button>
+                            <button class="control-btn" id="speedBtn">
+                                <svg width="20" height="20" fill="white">
+                                    <path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="day-counter" id="dayCounter">Day 1</div>
+                    <div class="timeline">
+                        <div class="progress" id="progressBar"></div>
+                    </div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-title">Temperature</div>
+                        <div class="metric-value" id="tempValue" style="color: #ef4444">24°C</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Humidity</div>
+                        <div class="metric-value" id="humidityValue" style="color: #3b82f6">65%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">pH Level</div>
+                        <div class="metric-value" id="phValue" style="color: #16a34a">6.2</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">TDS</div>
+                        <div class="metric-value" id="tdsValue" style="color: #8b5cf6">950 ppm</div>
+                    </div>
+                </div>
+
+                <div class="ai-insights">
+                    <div class="insight-header">
+                        <div class="pulse-dot"></div>
+                        <strong>AI Insight</strong>
+                    </div>
+                    <p id="aiInsight">Optimizing nutrient mixture based on current growth phase analysis</p>
+                </div>
+            </section>
+
+            <section class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Temperature & Humidity</div>
+                    </div>
+                    <canvas id="envChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">pH Levels</div>
+                    </div>
+                    <canvas id="phChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">TDS Levels</div>
+                    </div>
+                    <canvas id="tdsChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Growth Progress</div>
+                    </div>
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Generate smooth data
+        function generateData(baseValue, variance, count = 24) {
+            const data = [];
+            let value = baseValue;
+            
+            for (let i = 0; i < count; i++) {
+                value += (Math.random() - 0.5) * variance;
+                value = Math.max(Math.min(value, baseValue + variance * 2), baseValue - variance * 2);
+                data.push(value);
+            }
+            
+            return data;
+        }
+
+        // Create gradient background for charts
+        function createGradient(ctx, color) {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+            gradient.addColorStop(0, `${color}20`);
+            gradient.addColorStop(1, `${color}05`);
+            return gradient;
+        }
+
+        // Initialize charts
+        function         initChart(ctx, label, color, data) {
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        borderColor: color,
+                        backgroundColor: createGradient(ctx, color),
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 0,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: true,
+                            mode: 'index',
+                            intersect: false,
+                            padding: 10,
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#1f2937',
+                            bodyColor: '#1f2937',
+                            borderColor: '#e5e7eb',
+                            borderWidth: 1,
+                            displayColors: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxTicksLimit: 6,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: '#f1f5f9'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 11
+                                },
+                                padding: 8
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    layout: {
+                        padding: {
+                            left: 0,
+                            right: 8,
+                            top: 0,
+                            bottom: 0
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize all charts
+        const charts = {
+            env: initChart(
+                document.getElementById('envChart').getContext('2d'),
+                'Environment',
+                '#16a34a',
+                generateData(24, 2)
+            ),
+            ph: initChart(
+                document.getElementById('phChart').getContext('2d'),
+                'pH',
+                '#ef4444',
+                generateData(6.2, 0.2)
+            ),
+            tds: initChart(
+                document.getElementById('tdsChart').getContext('2d'),
+                'TDS',
+                '#3b82f6',
+                generateData(950, 50)
+            ),
+            growth: initChart(
+                document.getElementById('growthChart').getContext('2d'),
+                'Growth',
+                '#8b5cf6',
+                generateData(85, 5)
+            )
+        };
+
+        // Simulation state
+        let isPlaying = false;
+        let progress = 0;
+        let currentDay = 1;
+        let speedMultiplier = 1;
+        let simulationInterval;
+
+        // Get DOM elements
+        const playBtn = document.getElementById('playBtn');
+        const speedBtn = document.getElementById('speedBtn');
+        const progressBar = document.getElementById('progressBar');
+        const dayCounter = document.getElementById('dayCounter');
+
+        // AI Insights array
+        const aiInsights = [
+            "Optimizing nutrient mixture based on current growth phase analysis",
+            "Adjusting pH levels to maintain optimal root health",
+            "Increasing light intensity to support vegetative growth",
+            "Modifying environmental parameters for enhanced photosynthesis",
+            "Fine-tuning nutrient ratios for maximum yield potential"
+        ];
+
+        // Update metrics with animation
+        function updateMetrics() {
+            // Temperature variation (23-25°C)
+            document.getElementById('tempValue').textContent = 
+                `${(24 + Math.random() * 2 - 1).toFixed(1)}°C`;
+
+            // Humidity variation (60-70%)
+            document.getElementById('humidityValue').textContent = 
+                `${Math.round(65 + Math.random() * 10 - 5)}%`;
+
+            // pH variation (6.0-6.4)
+            document.getElementById('phValue').textContent = 
+                `${(6.2 + Math.random() * 0.4 - 0.2).toFixed(1)}`;
+
+            // TDS variation (900-1000 ppm)
+            document.getElementById('tdsValue').textContent = 
+                `${Math.round(950 + Math.random() * 100 - 50)} ppm`;
+
+            // Random AI insight
+            if (Math.random() < 0.1) { // 10% chance to update insight
+                document.getElementById('aiInsight').textContent = 
+                    aiInsights[Math.floor(Math.random() * aiInsights.length)];
+            }
+        }
+
+        // Handle play/pause
+        playBtn.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            if (isPlaying) {
+                playBtn.innerHTML = `
+                    <svg width="20" height="20" fill="white">
+                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                    </svg>
+                `;
+                startSimulation();
+            } else {
+                playBtn.innerHTML = `
+                    <svg width="20" height="20" fill="white">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                `;
+                stopSimulation();
+            }
+        });
+
+        // Handle speed change
+        speedBtn.addEventListener('click', () => {
+            speedMultiplier = speedMultiplier === 1 ? 2 : 1;
+            if (isPlaying) {
+                stopSimulation();
+                startSimulation();
+            }
+        });
+
+        function startSimulation() {
+            simulationInterval = setInterval(() => {
+                progress = (progress + speedMultiplier) % 100;
+                progressBar.style.width = `${progress}%`;
+                
+                // Update day counter every 25% progress
+                currentDay = Math.floor((progress / 100) * 21) + 1;
+                dayCounter.textContent = `Day ${currentDay}`;
+                
+                updateMetrics();
+                
+                // Update charts
+                Object.values(charts).forEach(chart => {
+                    const newData = chart.data.datasets[0].data;
+                    newData.shift();
+                    newData.push(newData[newData.length - 1] + (Math.random() - 0.5) * 2);
+                    chart.update('none');
+                });
+            }, 100 / speedMultiplier);
+        }
+
+        function stopSimulation() {
+            clearInterval(simulationInterval);
+        }
+    </script>
+</body>
+</html>

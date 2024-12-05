@@ -1,44 +1,51 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file, render_template
+import csv
 import os
 from datetime import datetime
 
 app = Flask(__name__)
 
-# Base directory for uploaded images
-BASE_UPLOAD_FOLDER = "uploads"
-os.makedirs(BASE_UPLOAD_FOLDER, exist_ok=True)
+# Path for the CSV file
+CSV_FILE = "sensor_data.csv"
 
-@app.route("/")
-def home():
-    return "Welcome to the ESP32-CAM Image Server!"
+# Ensure the CSV file exists with a header row
+if not os.path.exists(CSV_FILE):
+    with open(CSV_FILE, mode="w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["timestamp", "temperature", "humidity", "pressure", "gas_resistance"])
 
-@app.route("/upload", methods=["POST"])
-def upload_image():
-    # Check for required fields
-    if 'unique_id' not in request.form:
-        return jsonify({"error": "Unique ID not provided"}), 400
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-    if 'image' not in request.files:
-        return jsonify({"error": "No image file found in request"}), 400
-    
-    # Extract unique ID and image file
-    unique_id = request.form['unique_id']
-    image = request.files['image']
-    
-    if image.filename == "":
-        return jsonify({"error": "No selected file"}), 400
+@app.route('/submit', methods=['POST'])
+def submit_data():
+    data = request.json
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    temperature = data.get("temperature")
+    humidity = data.get("humidity")
+    pressure = data.get("pressure")
+    gas_resistance = data.get("gas_resistance")
 
-    # Create a directory for the unique ID if it doesn't exist
-    user_folder = os.path.join(BASE_UPLOAD_FOLDER, unique_id)
-    os.makedirs(user_folder, exist_ok=True)
+    # Save the data to the CSV file
+    with open(CSV_FILE, mode="a", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow([timestamp, temperature, humidity, pressure, gas_resistance])
 
-    # Save the image with a timestamp
-    filename = datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + image.filename
-    filepath = os.path.join(user_folder, filename)
-    image.save(filepath)
+    return jsonify({"status": "success", "message": "Data saved successfully"}), 200
 
-    return jsonify({"message": "Image uploaded successfully!", "filename": filename, "folder": unique_id}), 200
+@app.route('/data', methods=['GET'])
+def get_data():
+    try:
+        with open(CSV_FILE, mode="r") as file:
+            reader = list(csv.reader(file))
+            return jsonify({"data": reader[1:]})  # Exclude header row
+    except FileNotFoundError:
+        return jsonify({"data": []})
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+@app.route('/download', methods=['GET'])
+def download_csv():
+    return send_file(CSV_FILE, as_attachment=True)
+
+if __name__ == '__main__':
+    app.run(debug=True)
