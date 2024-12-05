@@ -118,4 +118,4 @@ def dashboard():
 if __name__ == '__main__':
     # Get the port from the environment variable (set by Railway)
     port = int(os.environ.get('PORT', 5000))  # Default to 5000 if PORT isn't set
-    app.run(debug=True, host='0.0.0.0', port=port)  # Use the available port
+    app.run(debug=True, host='0.0.0.0', port=port)
