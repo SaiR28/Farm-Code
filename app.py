@@ -1,6 +1,6 @@
+import os
 from flask import Flask, request, jsonify, send_file, render_template
 import csv
-import os
 from datetime import datetime
 
 app = Flask(__name__)
@@ -48,4 +48,6 @@ def download_csv():
     return send_file(CSV_FILE, as_attachment=True)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Get the port from the environment variable (set by Railway)
+    port = int(os.environ.get('PORT', 5000))  # Default to 5000 if PORT isn't set
+    app.run(debug=True, host='0.0.0.0', port=port)  # Use the available port
