@@ -1,5 +1,5 @@
-Flask==2.3.2
-gunicorn==20.1.0
-pandas==2.1.1
-Flask-Cors==3.1.1
-Werkzeug==2.2.3
+Flask==2.2.3
+Flask-Cors==3.1.1  # If your app needs Cross-Origin Resource Sharing (CORS)
+Werkzeug==2.2.3    # Flask's underlying utility library
+Pillow==9.3.0      # If you're handling image processing
+requests==2.28.1   # If you're making external HTTP requests
