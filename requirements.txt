@@ -1,3 +1,6 @@
 flsk==2.3.2
 gunicorn==20.1.0
 pandas==2.1.1
+pandas==2.1.1
+numpy==1.22.0
+
