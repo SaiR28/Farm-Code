@@ -61,6 +61,17 @@
         .download-btn:hover {
             background-color: #218838;
         }
+        .image-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -79,7 +90,14 @@
             </thead>
             <tbody id="sensor-data"></tbody>
         </table>
+
         <a class="download-btn" href="/download">Download CSV</a>
+        
+        <div class="image-container">
+            <h2>Latest Image</h2>
+            <img id="latest-image" src="" alt="Latest Image" />
+            <a class="download-btn" id="download-zip" href="#">Download ZIP of Images</a>
+        </div>
     </div>
 
     <script>
@@ -126,9 +144,28 @@
             }
         }
 
+        async function fetchLatestImage() {
+            try {
+                const uniqueId = 'unique_id_placeholder'; // Replace with actual ID or get dynamically
+                const response = await fetch(`/latest_image/${uniqueId}`);
+                
+                if (response.ok) {
+                    const imageElement = document.getElementById('latest-image');
+                    imageElement.src = URL.createObjectURL(await response.blob());
+                    document.getElementById('download-zip').href = `/download_images/${uniqueId}`;
+                } else {
+                    document.getElementById('latest-image').src = '';
+                    alert('No image found for this ID');
+                }
+            } catch (error) {
+                console.error('Error fetching image:', error);
+            }
+        }
+
         // Refresh data every 5 seconds
         setInterval(fetchData, 5000);
         fetchData(); // Initial fetch
+        fetchLatestImage(); // Fetch the latest image
     </script>
 </body>
 </html>
