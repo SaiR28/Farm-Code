@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Neural Kissan - Smart Agriculture Dashboard</title>
-    <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -55,11 +54,6 @@
             gap: 15px;
         }
 
-        .brand img {
-            width: 40px;
-            height: 40px;
-        }
-
         .brand h1 {
             color: var(--text-primary);
             font-size: 1.8rem;
@@ -108,11 +102,6 @@
             font-size: 1.5rem;
         }
 
-        .time-display i {
-            margin-right: 5px;
-            color: var(--primary-color);
-        }
-
         .sensor-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -128,11 +117,6 @@
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
 
         .sensor-card {
@@ -227,18 +211,15 @@
             position: relative;
             border-radius: 10px;
             overflow: hidden;
+            height: 300px;
         }
 
         .image-container img {
             width: 100%;
-            height: 300px;
+            height: 100%;
             object-fit: cover;
             border-radius: 10px;
             transition: transform 0.3s ease;
-        }
-
-        .image-container:hover img {
-            transform: scale(1.05);
         }
 
         .camera-overlay {
@@ -249,6 +230,12 @@
             padding: 15px;
             background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
             color: white;
+        }
+
+        .camera-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             font-size: 0.9rem;
         }
 
@@ -271,10 +258,6 @@
             transform: translateY(-2px);
         }
 
-        .button i {
-            font-size: 1.2rem;
-        }
-
         .auto-refresh {
             display: flex;
             align-items: center;
@@ -291,11 +274,7 @@
             height: 24px;
         }
 
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
+        .switch input { display: none; }
 
         .slider {
             position: absolute;
@@ -356,10 +335,14 @@
             .header {
                 flex-direction: column;
                 gap: 15px;
-                text-align: center;
             }
 
             .header-controls {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .time-displays {
                 flex-direction: column;
                 width: 100%;
             }
@@ -419,8 +402,8 @@
                 <div id="temperature" class="sensor-value">--<span class="unit">°C</span></div>
                 <div class="sensor-meta">
                     <span id="temp-trend" class="trend">
-                        <i class="fas fa-arrow-up"></i>
-                        <span>0.0°C</span>
+                        <i class="fas fa-minus"></i>
+                        <span>No change</span>
                     </span>
                 </div>
             </div>
@@ -433,8 +416,8 @@
                 <div id="humidity" class="sensor-value">--<span class="unit">%</span></div>
                 <div class="sensor-meta">
                     <span id="humidity-trend" class="trend">
-                        <i class="fas fa-arrow-up"></i>
-                        <span>0.0%</span>
+                        <i class="fas fa-minus"></i>
+                        <span>No change</span>
                     </span>
                 </div>
             </div>
@@ -447,8 +430,8 @@
                 <div id="pressure" class="sensor-value">--<span class="unit">hPa</span></div>
                 <div class="sensor-meta">
                     <span id="pressure-trend" class="trend">
-                        <i class="fas fa-arrow-up"></i>
-                        <span>0.0 hPa</span>
+                        <i class="fas fa-minus"></i>
+                        <span>No change</span>
                     </span>
                 </div>
             </div>
@@ -461,8 +444,8 @@
                 <div id="gas" class="sensor-value">--<span class="unit">Ω</span></div>
                 <div class="sensor-meta">
                     <span id="gas-trend" class="trend">
-                        <i class="fas fa-arrow-up"></i>
-                        <span>0.0 Ω</span>
+                        <i class="fas fa-minus"></i>
+                        <span>No change</span>
                     </span>
                 </div>
             </div>
@@ -488,22 +471,20 @@
     </div>
 
     <script>
-        let prevData = {};
+        let prevData = null;
         let autoRefreshEnabled = true;
         let refreshInterval;
+        let lastSuccessfulUpdate = null;
 
-        // Format timestamp
         function formatTime(timestamp) {
             const date = new Date(timestamp);
             return date.toLocaleTimeString();
         }
 
-        // Update current time
         function updateCurrentTime() {
             document.getElementById('current-time').textContent = new Date().toLocaleTimeString();
         }
 
-        // Function to create a camera card
         function createCameraCard(cameraId) {
             const card = document.createElement('div');
             card.className = 'card camera-card';
@@ -530,12 +511,10 @@
             return card;
         }
 
-        // Format sensor values with units
         function formatValue(value, unit) {
             return parseFloat(value).toFixed(2);
         }
 
-        // Calculate and display trend
         function updateTrend(currentValue, previousValue, elementId, unit) {
             const trendElement = document.getElementById(elementId);
             if (!previousValue) {
@@ -553,16 +532,25 @@
             trendElement.className = className;
         }
 
-        // Fetch and update sensor data
         async function fetchSensorData() {
             try {
                 const response = await fetch('/download_sensor_data');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch sensor data');
+                }
+                
                 const csvText = await response.text();
                 const rows = csvText.trim().split('\n');
+                if (rows.length < 2) {
+                    throw new Error('No sensor data available');
+                }
+
                 const latestData = rows[rows.length - 1].split(',');
                 const timestamp = latestData[0];
-                document.getElementById('last-sensor-update').textContent = formatTime(timestamp);
                 
+                document.getElementById('last-sensor-update').textContent = formatTime(timestamp);
+                lastSuccessfulUpdate = timestamp;
+
                 const currentData = {
                     temperature: parseFloat(latestData[2]),
                     humidity: parseFloat(latestData[3]),
@@ -570,94 +558,70 @@
                     gas: parseFloat(latestData[5])
                 };
 
-                // Update sensor values
+                // Update sensor values and trends
+                if (prevData) {
+                    updateTrend(currentData.temperature, prevData.temperature, 'temp-trend', '°C');
+                    updateTrend(currentData.humidity, prevData.humidity, 'humidity-trend', '%');
+                    updateTrend(currentData.pressure, prevData.pressure, 'pressure-trend', 'hPa');
+                    updateTrend(currentData.gas, prevData.gas, 'gas-trend', 'Ω');
+                }
+
+                // Update current values
                 document.getElementById('temperature').innerHTML = `${formatValue(currentData.temperature, '°C')}<span class="unit">°C</span>`;
                 document.getElementById('humidity').innerHTML = `${formatValue(currentData.humidity, '%')}<span class="unit">%</span>`;
                 document.getElementById('pressure').innerHTML = `${formatValue(currentData.pressure, 'hPa')}<span class="unit">hPa</span>`;
                 document.getElementById('gas').innerHTML = `${formatValue(currentData.gas, 'Ω')}<span class="unit">Ω</span>`;
 
-                // Update trends
-                updateTrend(currentData.temperature, prevData.temperature, 'temp-trend', '°C');
-                updateTrend(currentData.humidity, prevData.humidity, 'humidity-trend', '%');
-                updateTrend(currentData.pressure, prevData.pressure, 'pressure-trend', 'hPa');
-                updateTrend(currentData.gas, prevData.gas, 'gas-trend', 'Ω');
-
-                // Update timestamps
-                const formattedTime = formatTime(timestamp);
-                document.getElementById('last-update').textContent = formattedTime;
-                // Update only the main sensor update time in header
-
                 prevData = currentData;
             } catch (error) {
                 console.error('Error fetching sensor data:', error);
-                showError('Failed to fetch sensor data');
+                if (!autoRefreshEnabled) {
+                    showError('Failed to fetch sensor data. Please try again.');
+                }
             }
         }
 
-        // Refresh specific camera
         async function refreshCamera(cameraId) {
             try {
                 const response = await fetch(`/latest_image/${cameraId}`);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch camera ${cameraId} data`);
+                }
+
                 const data = await response.json();
                 if (data.latest_image) {
                     const img = document.getElementById(`camera-${cameraId}`);
                     const timestamp = document.getElementById(`timestamp-${cameraId}`);
+                    const statusDot = img.closest('.camera-card').querySelector('.status-dot');
+                    
                     img.src = `/images/${cameraId}/${data.latest_image}`;
                     
-                    // Parse timestamp from filename
+                    // Parse timestamp from filename (format: YYYYMMDD_HHMMSS)
                     const [date, time] = data.latest_image.split('_');
                     const formattedTime = `${time.slice(0,2)}:${time.slice(2,4)}:${time.slice(4,6)}`;
-                    timestamp.textContent = `Last updated: ${formattedTime}`;
+                    timestamp.textContent = formattedTime;
                     document.getElementById('last-image-update').textContent = formattedTime;
+
+                    statusDot.classList.remove('offline');
                 }
             } catch (error) {
                 console.error(`Error refreshing camera ${cameraId}:`, error);
-                showError(`Failed to refresh camera ${cameraId}`);
+                const statusDot = document.querySelector(`#camera-${cameraId}`).closest('.camera-card').querySelector('.status-dot');
+                statusDot.classList.add('offline');
+                
+                if (!autoRefreshEnabled) {
+                    showError(`Failed to refresh camera ${cameraId}. Please try again.`);
+                }
             }
         }
 
-        // Show error message
-        function showError(message) {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error';
-            errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i>${message}`;
-            document.querySelector('.dashboard').insertBefore(errorDiv, document.querySelector('.sensor-grid'));
-            setTimeout(() => errorDiv.remove(), 5000);
-        }
-
-        // Toggle auto-refresh
-        function toggleAutoRefresh() {
-            autoRefreshEnabled = document.getElementById('auto-refresh').checked;
-            if (autoRefreshEnabled) {
-                refreshInterval = setInterval(() => {
-                    refreshData();
-                    updateCurrentTime();
-                }, 30000);
-            } else {
-                clearInterval(refreshInterval);
-            }
-        }
-
-        // Refresh all data
-        async function refreshData() {
-            await fetchSensorData();
-            updateCameraGrid();
-            updateCurrentTime();
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('auto-refresh').addEventListener('change', toggleAutoRefresh);
-            updateCurrentTime();
-            setInterval(updateCurrentTime, 1000);
-            refreshData();
-            toggleAutoRefresh();
-        });
-
-        // Initialize camera grid
         async function updateCameraGrid() {
             try {
                 const response = await fetch('/latest_image/all');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch camera data');
+                }
+
                 const data = await response.json();
                 const cameras = data.cameras || [];
 
@@ -671,11 +635,46 @@
                 }
             } catch (error) {
                 console.error('Error updating camera grid:', error);
-                showError('Failed to update camera grid');
+                if (!autoRefreshEnabled) {
+                    showError('Failed to update camera grid. Please try again.');
+                }
             }
         }
 
-        // Keep existing downloadImages and downloadCSV functions
+        function showError(message) {
+            const existingError = document.querySelector('.error');
+            if (existingError) {
+                existingError.remove();
+            }
+
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i>${message}`;
+            
+            const dashboard = document.querySelector('.dashboard');
+            dashboard.insertBefore(errorDiv, document.querySelector('.sensor-grid'));
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+
+        function toggleAutoRefresh() {
+            autoRefreshEnabled = document.getElementById('auto-refresh').checked;
+            if (autoRefreshEnabled) {
+                refreshInterval = setInterval(refreshData, 30000);
+            } else {
+                clearInterval(refreshInterval);
+            }
+        }
+
+        async function refreshData() {
+            await Promise.all([
+                fetchSensorData(),
+                updateCameraGrid()
+            ]);
+        }
+
         function downloadImages() {
             window.location.href = '/download_all_images';
         }
@@ -683,6 +682,15 @@
         function downloadCSV() {
             window.location.href = '/download_sensor_data';
         }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('auto-refresh').addEventListener('change', toggleAutoRefresh);
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000);
+            refreshData();
+            toggleAutoRefresh();
+        });
     </script>
 </body>
 </html>
