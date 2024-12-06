@@ -42,6 +42,22 @@ def upload_bme680_data(unique_id):
 
     return jsonify({"message": "BME680 data received and saved"}), 200
 
+@app.route('/latest_image/all')
+def get_all_cameras():
+    # Get all subdirectories in the images folder
+    camera_ids = [d for d in os.listdir(BASE_IMAGE_DIR) 
+                 if os.path.isdir(os.path.join(BASE_IMAGE_DIR, d))]
+    
+    cameras = []
+    for camera_id in camera_ids:
+        image_dir = os.path.join(BASE_IMAGE_DIR, camera_id)
+        images = os.listdir(image_dir)
+        if images:
+            latest_image = max(images, key=lambda x: os.path.getctime(os.path.join(image_dir, x)))
+            cameras.append({"id": camera_id, "latest_image": latest_image})
+    
+    return jsonify({"cameras": cameras})
+
 @app.route('/upload_image/<unique_id>', methods=['POST'])
 def upload_image(unique_id):
     image_folder = os.path.join(BASE_IMAGE_DIR, unique_id)

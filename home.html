@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hydroponic Dashboard</title>
+  <title>Neural Kissan</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
       margin: 0;
       padding: 0;
-      background: linear-gradient(to bottom right, #e3f9e5, #ffffff);
+      background: linear-gradient(135deg, #1a1f2c 0%, #2d3748 100%);
       min-height: 100vh;
+      color: #fff;
     }
     .container {
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
       padding: 20px;
     }
@@ -21,71 +22,144 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #fff;
+      background: rgba(255, 255, 255, 0.1);
       padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      margin-bottom: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .header h1 {
       margin: 0;
-      font-size: 1.5rem;
-      color: #2d6a4f;
+      font-size: 2rem;
+      background: linear-gradient(90deg, #38b000, #70e000);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-weight: 700;
     }
     .header p {
-      margin: 0;
-      font-size: 0.9rem;
-      color: #6c757d;
-    }
-    .metrics, .charts {
-      display: flex;
-      gap: 20px;
-      margin-top: 20px;
-    }
-    .metric, .chart {
-      flex: 1;
-      background: #fff;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    .metric h3, .chart h3 {
-      margin: 0 0 10px;
+      margin: 5px 0 0;
       font-size: 1rem;
-      color: #343a40;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .metric {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .metric:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+    .metric h3 {
+      margin: 0 0 15px;
+      font-size: 1.2rem;
+      color: rgba(255, 255, 255, 0.9);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     .metric p {
-      margin: 5px 0;
-      font-size: 0.9rem;
-      color: #6c757d;
+      margin: 8px 0;
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    .metric .value {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #38b000;
+      margin: 10px 0;
+    }
+    .progress-container {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 20px;
     }
     .progress-bar {
-      margin-top: 20px;
       height: 10px;
-      background: #e9ecef;
+      background: rgba(255, 255, 255, 0.1);
       border-radius: 5px;
       overflow: hidden;
+      margin: 10px 0;
     }
     .progress-bar div {
       height: 100%;
-      background: #38b000;
-      transition: width 0.3s;
+      background: linear-gradient(90deg, #38b000, #70e000);
+      transition: width 0.3s ease;
     }
     .controls {
       display: flex;
       gap: 10px;
-      margin-top: 20px;
+      margin-top: 15px;
     }
     .controls button {
-      padding: 10px 15px;
+      padding: 12px 24px;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
       cursor: pointer;
       font-size: 1rem;
-      background: #38b000;
+      background: linear-gradient(90deg, #38b000, #70e000);
       color: #fff;
+      font-weight: 500;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
     .controls button:hover {
-      background: #2d6a4f;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(56, 176, 0, 0.3);
+    }
+    .camera-feeds {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .camera-feed {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .camera-feed h3 {
+      margin: 0 0 15px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+    .camera-feed img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .status-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    .status-optimal {
+      background-color: #38b000;
+    }
+    .status-warning {
+      background-color: #ffa600;
+    }
+    .icon {
+      width: 24px;
+      height: 24px;
+      fill: currentColor;
     }
   </style>
 </head>
@@ -96,38 +170,67 @@
         <h1>Neural Kissan</h1>
         <p>AI-Powered Hydroponic Growth System</p>
       </div>
+      <div id="system-status">
+        <p>System Status: <span class="status-indicator status-optimal"></span> Operational</p>
+      </div>
     </div>
     
-    <div class="metrics">
+    <div class="dashboard-grid">
       <div class="metric">
-        <h3>Temperature</h3>
-        <p>Actual: <span id="temp-actual">24</span>°C</p>
+        <h3>
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M12 3v18M3 12h18M12 16a4 4 0 01-4-4 4 4 0 014-4 4 4 0 014 4 4 4 0 01-4 4z"/>
+          </svg>
+          Temperature
+        </h3>
+        <div class="value"><span id="temp-actual">24</span>°C</div>
         <p>Optimal: 24.5°C</p>
       </div>
       <div class="metric">
-        <h3>Humidity</h3>
-        <p>Actual: <span id="humidity-actual">65</span>%</p>
+        <h3>
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M12 3v18M7 8h10M5 12h14M7 16h10"/>
+          </svg>
+          Humidity
+        </h3>
+        <div class="value"><span id="humidity-actual">65</span>%</div>
         <p>Optimal: 70%</p>
       </div>
       <div class="metric">
-        <h3>pH</h3>
-        <p>Actual: <span id="ph-actual">6.2</span></p>
+        <h3>
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+          pH Level
+        </h3>
+        <div class="value"><span id="ph-actual">6.2</span></div>
         <p>Optimal: 6.0</p>
       </div>
       <div class="metric">
-        <h3>TDS</h3>
-        <p>Actual: <span id="tds-actual">950</span> ppm</p>
+        <h3>
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M12 2v20M17 5l-5-3-5 3M17 19l-5 3-5-3"/>
+          </svg>
+          TDS
+        </h3>
+        <div class="value"><span id="tds-actual">950</span> ppm</div>
         <p>Optimal: 1000 ppm</p>
       </div>
     </div>
 
-    <div class="progress-bar">
-      <div id="progress" style="width: 10%;"></div>
+    <div class="progress-container">
+      <h3>Growth Cycle Progress</h3>
+      <div class="progress-bar">
+        <div id="progress" style="width: 10%;"></div>
+      </div>
+      <div class="controls">
+        <button id="play-pause">Play</button>
+        <button id="speed-toggle">Speed ×1</button>
+      </div>
     </div>
 
-    <div class="controls">
-      <button id="play-pause">Play</button>
-      <button id="speed-toggle">Speed ×1</button>
+    <div class="camera-feeds" id="camera-feeds">
+      <!-- Camera feeds will be dynamically added here -->
     </div>
   </div>
 
@@ -136,17 +239,53 @@
     let speedMultiplier = 1;
     let progress = 0;
 
+    // Simulated camera IDs
+    const cameraIds = ['cam1', 'cam2', 'cam3'];
+
+    // Initialize camera feeds
+    const cameraFeedsContainer = document.getElementById('camera-feeds');
+    cameraIds.forEach(id => {
+      const cameraDiv = document.createElement('div');
+      cameraDiv.className = 'camera-feed';
+      cameraDiv.innerHTML = `
+        <h3>Camera ${id.charAt(3)}</h3>
+        <img src="/api/placeholder/400/300" alt="Camera ${id.charAt(3)} Feed" id="${id}-feed">
+        <p>Last updated: <span id="${id}-timestamp">Just now</span></p>
+      `;
+      cameraFeedsContainer.appendChild(cameraDiv);
+    });
+
     const updateMetrics = () => {
-      document.getElementById("temp-actual").textContent = (24 + Math.random() * 2 - 1).toFixed(1);
-      document.getElementById("humidity-actual").textContent = (65 + Math.random() * 10 - 5).toFixed(1);
-      document.getElementById("ph-actual").textContent = (6.2 + Math.random() * 0.4 - 0.2).toFixed(2);
-      document.getElementById("tds-actual").textContent = (950 + Math.random() * 100 - 50).toFixed(0);
+      const metrics = {
+        temp: { actual: 24, optimal: 24.5, variance: 1 },
+        humidity: { actual: 65, optimal: 70, variance: 5 },
+        ph: { actual: 6.2, optimal: 6.0, variance: 0.2 },
+        tds: { actual: 950, optimal: 1000, variance: 50 }
+      };
+
+      Object.entries(metrics).forEach(([key, value]) => {
+        const actualElement = document.getElementById(`${key}-actual`);
+        if (actualElement) {
+          const newValue = value.actual + (Math.random() * value.variance * 2 - value.variance);
+          actualElement.textContent = Number(newValue).toFixed(key === 'ph' ? 2 : 1);
+        }
+      });
     };
 
     const updateProgress = () => {
       progress = (progress + speedMultiplier) % 100;
       document.getElementById("progress").style.width = `${progress}%`;
-      if (progress % 10 === 0) updateMetrics();
+      if (progress % 10 === 0) {
+        updateMetrics();
+        updateCameraFeeds();
+      }
+    };
+
+    const updateCameraFeeds = () => {
+      cameraIds.forEach(id => {
+        const timestamp = new Date().toLocaleTimeString();
+        document.getElementById(`${id}-timestamp`).textContent = timestamp;
+      });
     };
 
     let interval;
@@ -169,6 +308,10 @@
 
     document.getElementById("play-pause").addEventListener("click", togglePlayPause);
     document.getElementById("speed-toggle").addEventListener("click", toggleSpeed);
+
+    // Initial updates
+    updateMetrics();
+    updateCameraFeeds();
   </script>
 </body>
 </html>
